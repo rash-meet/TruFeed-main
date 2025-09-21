@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vertical-Controlled, Horizontal Workflow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(120deg, #09131b 55%, #25cbdc 200%);
+        font-family: "Inter", sans-serif;
+        color: #f8f9fb;
+        overflow: hidden;
+      }
+      .wrapper {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .progress-bar-bg {
+        width: 68vw;
+        height: 11px;
+        background: #202f3c;
+        border-radius: 7px;
+        margin-bottom: 2em;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #25cbdc, #ffc857 80%);
+        width: 0%;
+        transition: width 0.55s;
+      }
+      .steps-outer {
+        width: 74vw;
+        height: 340px;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 6px 36px #25cbdc28;
+        border-radius: 18px;
+        background: rgba(15, 34, 54, 0.8);
+      }
+      .steps-row {
+        display: flex;
+        transition: transform 0.85s cubic-bezier(0.5, 1.4, 0.4, 1), filter 0.4s;
+        height: 100%;
+      }
+      .step {
+        width: 340px;
+        min-width: 340px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: rgba(21, 32, 43, 0.74);
+        margin: 0 12px;
+        border-radius: 15px;
+        opacity: 0.58;
+        transform: scale(0.93);
+      }
+      .step.active {
+        opacity: 1;
+        z-index: 2;
+        transform: scale(1.06);
+        filter: saturate(1.15);
+        box-shadow: 0 8px 28px #25cbdc88;
+        border: 2.5px solid #25cbdc;
+      }
+      .step.completed {
+        opacity: 0.7;
+        border-color: #ffc857;
+      }
+      .step .done-check {
+        display: none;
+        position: absolute;
+        top: 9px;
+        right: 18px;
+        font-size: 2em;
+        color: #ffc857;
+        font-weight: 900;
+        filter: drop-shadow(0 2px 7px #ffd700);
+      }
+      .step.completed .done-check {
+        display: block;
+      }
+      .feature-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(92deg, #1fb8d6 60%, #fad960 160%);
+        border-radius: 50%;
+        box-shadow: 0 1px 13px #25cbdc22;
+        width: 51px;
+        height: 51px;
+        font-size: 2rem;
+        margin-bottom: 13px;
+      }
+      .feature-title {
+        color: #25cbdc;
+        font-size: 1.2rem;
+        font-weight: 900;
+        margin: 0.7em 0 0.5em 0;
+        letter-spacing: -0.6px;
+      }
+      .step[data-anim="flip"].animate-in {
+        animation: flipStep 0.7s;
+      }
+      .step[data-anim="bounce"].animate-in {
+        animation: bounceStep 0.7s;
+      }
+      .step[data-anim="fade-slide"].animate-in {
+        animation: fadeSlideStep 0.8s;
+      }
+      @keyframes flipStep {
+        0% {
+          transform: rotateY(90deg) scale(0.67);
+        }
+        70% {
+          transform: rotateY(-15deg) scale(1.12);
+        }
+        100% {
+          transform: rotateY(0) scale(1);
+        }
+      }
+      @keyframes bounceStep {
+        0% {
+          transform: scale(0.67);
+        }
+        60% {
+          transform: scale(1.13);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @keyframes fadeSlideStep {
+        0% {
+          opacity: 0;
+          transform: translateY(48px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .step-label {
+        margin-bottom: 10px;
+        color: #ffc857;
+        font-weight: 700;
+        letter-spacing: 1.3px;
+      }
+      @media (max-width: 700px) {
+        .steps-outer {
+          width: 99vw;
+          min-width: 90vw;
+        }
+        .step {
+          width: 90vw;
+          min-width: 90vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+      <div class="steps-outer">
+        <div class="steps-row" id="steps-row">
+          <div class="step active" data-anim="flip">
+            <span class="done-check">&#10003;</span>
+            <div class="feature-icon">📝</div>
+            <div class="feature-title">Submit Report</div>
+            Report any event via app, form, or public hashtag #TruFeed.
+          </div>
+          <div class="step" data-anim="bounce">
+            <span class="done-check">&#10003;</span>
+            <div class="feature-icon">🤖</div>
+            <div class="feature-title">AI Validation</div>
+            Automated Gemini/AI checks and summarizes for accuracy and urgency.
+          </div>
+          <div class="step" data-anim="fade-slide">
+            <span class="done-check">&#10003;</span>
+            <div class="feature-icon">🗳</div>
+            <div class="feature-title">Community Voting</div>
+            Citizens crowd-verify events, upvoting truth and downvoting noise.
+          </div>
+          <div class="step" data-anim="flip">
+            <span class="done-check">&#10003;</span>
+            <div class="feature-icon">📡</div>
+            <div class="feature-title">Broadcast Alert</div>
+            Real-time alerts reach all—citywide and nationally—once verified.
+          </div>
+        </div>
+      </div>
+      <div
+        style="
+          margin-top: 1.5em;
+          color: #ffdda8;
+          font-size: 1em;
+          text-align: center;
+        "
+      >
+        <em
+          >Scroll down or up to go through the workflow.<br />
+          Workflow is displayed horizontally; you control it vertically.<br />
+          Each step animates as you proceed.</em
+        >
+      </div>
+    </div>
+    <script>
+      const steps = Array.from(document.querySelectorAll('.step'));
+      const row = document.getElementById('steps-row');
+      const progressBar = document.getElementById('progress-bar');
+      let curr = 0, isAnimating = false;
+
+function moveToStep(i){
+      // Mark classes
+      steps.forEach((step, idx)=>{
+        step.classList.remove('active','completed','animate-in');
+        if(idx < i) step.classList.add('completed');
+        else step.classList.remove('completed');
+      });
+      steps[i].classList.add('active','animate-in');
+      // Progress
+      progressBar.style.width = (100*i/(steps.length-1)) + "%";
+      // Animate
+      setTimeout(()=>steps[i].classList.remove('animate-in'), 850);
+      // Move row horizontally
+      row.style.transform = `translateX(-${i*(steps[0].offsetWidth + 24)}px)`;
+    }
+      // Mouse wheel/trackpad vertical control
+      window.addEventListener('wheel', function(e){
+        if(isAnimating) return e.preventDefault();
+        if(e.deltaY > 36 && curr < steps.length-1){
+          isAnimating=true;curr++;moveToStep(curr);
+          setTimeout(()=>isAnimating=false,1000);
+          return e.preventDefault();
+        } else if(e.deltaY < -36 && curr > 0){
+          isAnimating=true;curr--;moveToStep(curr);
+          setTimeout(()=>isAnimating=false,1000);
+          return e.preventDefault();
+        }
+      }, {passive:false});
+
+      // Touch support: vertical swipe
+      let touchStartY=null;
+      window.addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY;});
+      window.addEventListener('touchend',e=>{
+        if(isAnimating||touchStartY===null)return;
+        let offset=touchStartY - e.changedTouches[0].clientY;
+        if(offset>36&&curr<steps.length-1){
+          isAnimating=true;curr++;moveToStep(curr);setTimeout(()=>isAnimating=false,1000);
+        }else if(offset<-36&&curr>0){
+          isAnimating=true;curr--;moveToStep(curr);setTimeout(()=>isAnimating=false,1000);
+        }
+        touchStartY=null;
+      });
+
+      // Prevent actual page scroll so all focus stays on the workflow
+      window.addEventListener('scroll',()=>{window.scrollTo(0,0);});
+
+      // Init
+      moveToStep(curr);
+      window.addEventListener('resize',()=>moveToStep(curr));
+    </script>
+  </body>
+</html>

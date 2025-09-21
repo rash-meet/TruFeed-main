@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TruFeed - Civic Intelligence</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+      :root {
+        --bg-dark: #0b0f2b;
+        --gradient-hero: linear-gradient(135deg, #0d102b 60%, #1f2e4e);
+        --gradient-workflow: linear-gradient(120deg, #112b3c, #1c4a6d);
+        --gradient-map: linear-gradient(to right, #0e1626, #184b60);
+        --teal: #31e0ff;
+        --highlight: #25f4ee;
+        --text-light: #f5f6fa;
+        --glass-bg: rgba(255, 255, 255, 0.07);
+        --border: rgba(255, 255, 255, 0.2);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-light);
+        overflow-x: hidden;
+      }
+
+      header.navbar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.2rem 4vw;
+        background: transparent;
+      }
+
+      .navbar .logo {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--teal);
+      }
+
+      .navbar nav {
+        display: flex;
+        gap: 2rem;
+        flex: 1;
+        justify-content: center;
+      }
+
+      .navbar nav a,
+      .navbar .cta {
+        font-weight: 500;
+        font-size: 1rem;
+        text-decoration: none;
+      }
+
+      .navbar nav a {
+        color: var(--text-light);
+      }
+
+      .navbar .cta {
+        background: var(--teal);
+        color: #0d102b;
+        padding: 0.6rem 1.4rem;
+        border-radius: 8px;
+      }
+
+      .hero {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding-top: 8rem;
+        background: var(--gradient-hero);
+      }
+
+      .hero img {
+        width: 240px;
+        margin-bottom: 1rem;
+        animation: float 5s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-12px);
+        }
+      }
+
+      .hero h1 {
+        font-size: 2.6rem;
+        max-width: 720px;
+        line-height: 1.3;
+      }
+
+      /* Workflow section */
+      .workflow-section {
+        background: var(--gradient-workflow);
+        padding: 4rem 0;
+      }
+
+      .workflow-container {
+        height: 80vh;
+        overflow: hidden;
+      }
+
+      .workflow-track {
+        display: flex;
+        gap: 4rem;
+        padding: 4rem;
+        height: 100vh;
+        width: max-content;
+      }
+
+      .workflow-step {
+        height: 40vh;
+        background: var(--glass-bg);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .workflow-step h3 {
+        font-size: 1.5rem;
+        color: var(--highlight);
+        margin-bottom: 1rem;
+      }
+
+      .workflow-step p {
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+
+      .step-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #555;
+        margin-bottom: 1rem;
+        border: 2px solid var(--highlight);
+      }
+
+      .workflow-step.active .step-indicator {
+        background: var(--highlight);
+        box-shadow: 0 0 10px var(--highlight);
+      }
+
+      /* India Map Section */
+      #india-map {
+        height: 100vh;
+        background: var(--gradient-map);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        padding: 2rem;
+      }
+
+      #india-map h2 {
+        font-size: 2.4rem;
+        margin-bottom: 2rem;
+        color: var(--teal);
+      }
+
+      svg {
+        width: 60vw;
+        stroke: var(--highlight);
+        stroke-width: 2;
+        fill: none;
+      }
+
+      #features path {
+        stroke-dasharray: 3500;
+        stroke-dashoffset: 3500;
+        filter: drop-shadow(0 0 10px #00ffee);
+      }
+
+      .pin {
+        opacity: 0;
+        r: 6;
+        stroke: white;
+        stroke-width: 1.5;
+        filter: drop-shadow(0 0 8px currentColor);
+      }
+
+      .severity-high {
+        fill: #ff365c;
+        color: #ff365c;
+      }
+
+      .severity-medium {
+        fill: #ffc62e;
+        color: #ffc62e;
+      }
+
+      .severity-low {
+        fill: #35b6fa;
+        color: #35b6fa;
+      }
+
+      #quote {
+        position: absolute;
+        bottom: 5%;
+        width: 100%;
+        text-align: center;
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #00ffee;
+        text-shadow: 0 0 15px #00ffee44;
+        opacity: 0;
+        transform: perspective(600px) translateZ(-200px) scale(0.8);
+        transition: all 1s ease;
+      }
+
+      #quote.show {
+        opacity: 1;
+        transform: perspective(600px) translateZ(0) scale(1);
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="navbar">
+      <div class="logo">🌐 TruFeed</div>
+      <nav>
+        <a href="#workflow">Workflow</a>
+        <a href="#features">Features</a>
+        <a href="#metrics">Metrics</a>
+      </nav>
+      <a class="cta" href="auth.html">Get Started</a>
+    </header>
+
+    <section class="hero">
+      <img
+        src="image-removebg-preview (16).png"
+        alt="Earth Icon"
+      />
+      <h1>Real-Time Civic Intelligence for a Safer, Smarter City</h1>
+      <!-- subheading will be injected here by JS -->
+      <button
+        class="start-btn"
+        onclick="document.getElementById('workflowPin').scrollIntoView({behavior: 'smooth'})"
+      >
+        Explore Now
+      </button>
+    </section>
+
+    <section class="workflow-section" id="workflowPin">
+      <div class="workflow-container">
+        <div class="workflow-track">
+          <div class="workflow-step">
+            <div class="step-indicator"></div>
+            <h3>Submit Report</h3>
+            <p>Citizens report issues via form or #TruFeed hashtag.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-indicator"></div>
+            <h3>AI Analysis</h3>
+            <p>Images and text analyzed by Vision + Gemini AI.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-indicator"></div>
+            <h3>Clustering</h3>
+            <p>Similar reports grouped for consistency and pattern.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-indicator"></div>
+            <h3>Confidence Score</h3>
+            <p>Score calculated using recency, votes, and AI insight.</p>
+          </div>
+          <div class="workflow-step">
+            <div class="step-indicator"></div>
+            <h3>Public Feed</h3>
+            <p>Summarized reports displayed on map + feed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="india-map">
+      <h2>India Sentiment Map 🇮🇳</h2>
+      <svg id="features"><g id="label_points"></g></svg>
+      <div id="quote"></div>
+    </section>
+
+    <section id="feature-cards">
+      <h2
+        style="text-align:center; font-size:2.6rem; margin:3rem 0; color:#fdee74; text-shadow:0 0 8px #fdee7488 background-color: #05031a;"
+      >
+        Core Capabilities
+      </h2>
+      <div
+        style="
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 2.5rem;
+          padding: 2rem 5vw;
+        "
+      >
+        <div
+          class="feature-card"
+          style="
+            width: 300px;
+            height: 350px;
+            background: linear-gradient(135deg, #1c2742, #3d2c67);
+            border: 1px solid #ffffff22;
+            border-radius: 18px;
+            padding: 1.7rem;
+            box-shadow: 0 4px 20px #31e0ff33;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(40px);
+          "
+        >
+          <h3 style="color: #25f4ee; margin-bottom: 0.9rem; font-size: 1.4rem">
+            Real-Time Feed
+          </h3>
+          <p style="text-align: center; opacity: 0.9; font-size: 0.95rem">
+            See all verified reports streaming live with severity, votes,
+            sentiment ,and confidence score.
+          </p>
+        </div>
+        <div
+          class="feature-card"
+          style="
+            width: 300px;
+            height: 350px;
+            background: linear-gradient(135deg, #1b1f3b, #354d73);
+            border: 1px solid #ffffff22;
+            border-radius: 18px;
+            padding: 1.7rem;
+            box-shadow: 0 4px 20px #25f4ee44;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(40px);
+          "
+        >
+          <h3 style="color: #31e0ff; margin-bottom: 0.9rem; font-size: 1.4rem">
+            Smart Clustering
+          </h3>
+          <p style="text-align: center; opacity: 0.9; font-size: 0.95rem">
+            The AI agent, groups related reports to avoid duplication and
+            improve clarity.
+          </p>
+        </div>
+        <div
+          class="feature-card"
+          style="
+            width: 300px;
+            height: 350px;
+            background: linear-gradient(135deg, #232946, #393e6e);
+            border: 1px solid #ffffff22;
+            border-radius: 18px;
+            padding: 1.7rem;
+            box-shadow: 0 4px 20px #c3ff2144;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(40px);
+          "
+        >
+          <h3 style="color: #fdee74; margin-bottom: 0.9rem; font-size: 1.4rem">
+            Predictive Alerts
+          </h3>
+          <p style="text-align: center; opacity: 0.9; font-size: 0.95rem">
+            Stay ahead of critical patterns with early AI-powered warnings.
+          </p>
+        </div>
+        <div
+          class="feature-card"
+          style="
+            width: 300px;
+            height: 350px;
+            background: linear-gradient(135deg, #1a1f38, #2d4466);
+            border: 1px solid #ffffff22;
+            border-radius: 18px;
+            padding: 1.7rem;
+            box-shadow: 0 4px 20px #ffc62e33;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(40px);
+          "
+        >
+          <h3 style="color: #ffc62e; margin-bottom: 0.9rem; font-size: 1.4rem">
+            Community Voting
+          </h3>
+          <p style="text-align: center; opacity: 0.9; font-size: 0.95rem">
+            Citizens can upvote or downvote event provided to further enhance
+            the platform's accuracy.
+          </p>
+        </div>
+      </div>
+    </section>
+    <section
+      id="mood-map"
+      style="
+        min-height: 100vh;
+        background: ;
+        padding: 4rem 5vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      "
+    >
+      <h2
+        style="
+          font-size: 2.6rem;
+          color: #31e0ff;
+          margin-bottom: 2rem;
+          text-shadow: 0 0 8px #31e0ff66;
+        "
+      >
+        Nationwide Mood Map
+      </h2>
+      <p
+        style="
+          max-width: 680px;
+          font-size: 1.1rem;
+          color: #f5f6fa;
+          opacity: 0.85;
+        "
+      >
+        Visualize how citizens are feeling across regions. Aggregated mood data
+        powered by AI sentiment analysis.
+      </p>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 2rem;
+          margin-top: 3rem;
+          width: 100%;
+          max-width: 1080px;
+        "
+      >
+        <div
+          class="mood-tile"
+          style="
+            background: #18283d;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px #31e0ff22;
+          "
+        >
+          <h3 style="color: #31e0ff; margin-bottom: 0.6rem">Postive</h3>
+          <p style="font-size: 2rem; font-weight: bold; color: #fdee74">73%</p>
+        </div>
+
+        <div
+          class="mood-tile"
+          style="
+            background: #18283d;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px #ff365c22;
+          "
+        >
+          <h3 style="color: #ff365c; margin-bottom: 0.6rem">Negative</h3>
+          <p style="font-size: 2rem; font-weight: bold; color: #ff365c">31%</p>
+        </div>
+        <div
+          class="mood-tile"
+          style="
+            background: #18283d;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 16px #35b6fa22;
+          "
+        >
+          <h3 style="color: #35b6fa; margin-bottom: 0.6rem">Neutral</h3>
+          <p style="font-size: 2rem; font-weight: bold; color: #35b6fa">64%</p>
+        </div>
+      </div>
+    </section>
+
+    <script>
+          gsap.registerPlugin(ScrollTrigger);
+
+          // Hero Subheading Loop
+          const subPhrases = [
+          "AI-powered civic awareness",
+          "Verified public reporting",
+          "Live incident tracking"
+          ];
+          let subIndex = 0;
+          const subheadingEl = document.createElement("p");
+          subheadingEl.style.marginTop = "0.8em";
+          subheadingEl.style.fontSize = "1.1rem";
+          subheadingEl.style.opacity = 0.9;
+          document.querySelector(".hero h1").after(subheadingEl);
+
+          function cycleSubheading() {
+            subheadingEl.style.opacity = 0;
+            setTimeout(() => {
+              subheadingEl.textContent = subPhrases[subIndex];
+              gsap.to(subheadingEl, {opacity: 1, duration: 0.6 });
+              subIndex = (subIndex + 1) % subPhrases.length;
+            }, 500);
+          }
+          setInterval(cycleSubheading, 2800);
+          cycleSubheading();
+
+          // Workflow Scroll Lock
+          const track = document.querySelector('.workflow-track');
+          const steps = gsap.utils.toArray('.workflow-step');
+          const scrollDistance = track.scrollWidth - window.innerWidth;
+
+          const scrollTween = gsap.to(track, {
+            x: -scrollDistance,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: '#workflowPin',
+              start: 'top top',
+              end: () => `+=${scrollDistance}`,
+              pin: true,
+              scrub: true,
+            }
+          });
+
+
+      steps.forEach((step) => {
+        ScrollTrigger.create({
+          trigger: step,
+          containerAnimation: scrollTween,
+          start: 'left center',
+          toggleClass: { targets: step, className: 'active' }
+        });
+      });
+
+        // Section fade-ins
+        gsap.utils.toArray("section").forEach(sec => {
+          gsap.from(sec, {
+            opacity: 0,
+            y: 40,
+            duration: 1.2,
+            scrollTrigger: {
+              trigger: sec,
+              start: "top 90%",
+              toggleActions: "play none none reset"
+            }
+          });
+        });
+
+        // Trigger India Map only after Workflow completed
+        let indiaAnimated = false;
+        ScrollTrigger.create({
+          trigger: "#india-map",
+          start: "top 80%",
+          onEnter: () => {
+            if (!indiaAnimated) {
+              indiaAnimated = true;
+              animateIndiaMap(); // defined below
+            }
+          }
+        });
+
+        // Animated India Pins + Quote Cycling
+        function animateIndiaMap() {
+          gsap.to('#features path', {
+            strokeDashoffset: 0,
+            duration: 6,
+            ease: "power1.inOut",
+            onComplete: popPins
+          });
+        }
+
+        function popPins() {
+          const pins = document.querySelectorAll('.pin');
+          pins.forEach((pin, i) => {
+            gsap.to(pin, {
+              opacity: 1,
+              scale: 1.8,
+              transformOrigin: "center",
+              ease: "elastic.out(1, 0.5)",
+              delay: i * 0.1,
+              duration: 0.6,
+              onComplete: () => gsap.to(pin, { scale: 1, duration: 0.3 })
+            });
+          });
+
+          setTimeout(() => {
+            showNextQuote();
+            setInterval(showNextQuote, 3000);
+          }, pins.length * 100 + 1000);
+        }
+
+        // Civic Quotes Cycle
+        const quotes = [
+          "TruFeed – Real-time insights across India",
+          "Empowering Communities with Live Alerts",
+          "Stay Ahead, Stay Informed"
+        ];
+        let quoteIndex = 0;
+        function showNextQuote() {
+          const quote = document.getElementById("quote");
+          quote.classList.remove("show");
+          setTimeout(() => {
+            quote.textContent = quotes[quoteIndex];
+            quote.classList.add("show");
+            quoteIndex = (quoteIndex + 1) % quotes.length;
+          }, 500);
+        }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruFeed | Login & Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+ <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="logo-gradient">TRUFEED</div>
+      <div class="auth-tagline">Sign in or create your civic account!</div>
+
+      <!-- Sign Up Form -->
+      <div id="signup-form">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" autocomplete="email" required />
+
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" autocomplete="new-password" required />
+
+        <button class="auth-btn" onclick="signup()">Sign Up</button>
+        <div id="message"></div>
+        <div class="switch-mode" onclick="switchMode('login')">Already have an account? <b>Log In</b></div>
+      </div>
+
+      
+      <div id="login-form" style="display:none;">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" autocomplete="email" required />
+
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" required />
+
+        <button class="auth-btn" onclick="login()">Log In</button>
+        <span class="forgot-password" onclick="forgotPassword()">Forgot password?</span>
+        <div id="message"></div>
+        <div class="switch-mode" onclick="switchMode('signup')">Don't have an account? <b>Sign Up</b></div>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2uyKd5A2ncFmXALwyCLwaASUwaF3XkNk",
+      authDomain: "the-truefeed.firebaseapp.com",
+      projectId: "the-truefeed",
+      storageBucket: "the-truefeed.appspot.com",
+      messagingSenderId: "252519231652",
+      appId: "1:252519231652:web:963e41bac0035cc96bf631",
+      measurementId: "G-B12N8TH4TK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    function showMessage(text, success = false) {
+      const msgEl = document.querySelector("#message");
+      msgEl.textContent = text;
+      msgEl.style.color = success ? "var(--success)" : "var(--error)";
+    }
+
+    window.switchMode = function(mode) {
+      const signup = document.getElementById("signup-form");
+      const login = document.getElementById("login-form");
+      signup.style.display = mode === "signup" ? "block" : "none";
+      login.style.display = mode === "login" ? "block" : "none";
+      showMessage("");
+    };
+
+    window.signup = function () {
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value;
+      if (!email || !password) return showMessage("Please fill out all fields.");
+      if (password.length < 6)
+        return showMessage("Password must be at least 6 characters.");
+
+      showMessage("Signing up...", true);
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          showMessage("Signup successful! Redirecting...", true);
+          setTimeout(() => (window.location.href =  "feed2.html"))
+        })
+        .catch((err) => showMessage(err.message));
+    };
+
+    window.login = function () {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+      if (!email || !password) return showMessage("Please fill out all fields.");
+
+      showMessage("Logging in...", true);
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          showMessage("Login successful! Redirecting...", true);
+          setTimeout(() => (window.location.href = "feed2.html"),1000);
+        })
+        .catch((err) => showMessage(err.message));
+    };
+
+    window.forgotPassword = function() {
+      const email = prompt("Enter your email for password reset:");
+      if (!email) return;
+      showMessage("Sending reset email...", true);
+      sendPasswordResetEmail(auth, email)
+        .then(() => showMessage("Reset email sent. Check your inbox.", true))
+        .catch((err) => showMessage(err.message));
+    };
+  </script>
+</body>
+</html>

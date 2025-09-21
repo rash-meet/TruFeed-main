@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit Report | TruFeed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="report.css">
+</head>
+<body>
+  <div class="report-form">
+    <h2>📍 Submit a Report</h2>
+    <form id="reportForm">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" required>
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="4" required></textarea>
+      <label for="severity">Severity</label>
+      <select id="severity" name="severity" required>
+        <option value="">Select severity</option>
+        <option value="low">Low</option>
+        <option value="moderate">Moderate</option>
+        <option value="high">High</option>
+        
+      </select>
+      <input type="hidden" id="latitude" name="latitude">
+      <input type="hidden" id="longitude" name="longitude">
+      <label>Choose or Capture Image</label>
+      <div id="image-actions">
+        <label for="image">📷 Upload Photo</label>
+        <input type="file" id="image" name="image" accept="image/*" capture="environment" style="display: none;">
+        <button type="button" class="glow-btn" id="startCamera">🎥 Open Webcam</button>
+      </div>
+      <div id="camera-preview" style="display: none;">
+        <video id="video" autoplay playsinline></video>
+        <button type="button" class="glow-btn" id="captureBtn">📸 Capture</button>
+      </div>
+      <div id="preview-container">
+        <canvas id="canvas"></canvas>
+        <img id="preview-image" src="" alt="Preview Image">
+      </div>
+      <p id="location-status">Detecting your location...</p>
+      <div id="map"></div>
+      <button type="submit" class="glow-btn">Submit Report</button>
+    </form>
+
+    <div id="confidence-box" style="display: none; margin-top: 2em; text-align: center;">
+      <h3 style="color: var(--highlight);">AI Confidence Score</h3>
+      <div style="width: 140px; height: 140px; margin: auto; position: relative;">
+        <svg width="140" height="140">
+          <circle cx="70" cy="70" r="60" stroke="#222" stroke-width="10" fill="none"/>
+          <circle id="confidence-ring" cx="70" cy="70" r="60" stroke="#1de9b6" stroke-width="10" fill="none"
+            stroke-dasharray="377" stroke-dashoffset="377" stroke-linecap="round" transform="rotate(-90 70 70)"/>
+        </svg>
+        <div id="confidence-label" style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; font-weight: bold; color: #1de9b6;">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+    const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_PROJECT_ID.firebaseapp.com", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_PROJECT_ID.appspot.com", messagingSenderId: "YOUR_SENDER_ID", appId: "YOUR_APP_ID" };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const latField = document.getElementById("latitude");
+    const lonField = document.getElementById("longitude");
+    const statusEl = document.getElementById("location-status");
+    const imageInput = document.getElementById("image");
+    const previewImg = document.getElementById("preview-image");
+    const mapDiv = document.getElementById("map");
+
+    function loadMap(lat, lon) {
+      mapDiv.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0" src="https://www.google.com/maps?q=${lat},${lon}&z=15&output=embed" allowfullscreen></iframe>`;
+    }
+
+    function updateMap() {
+      const lat = latField.value;
+      const lon = lonField.value;
+      if (lat && lon) loadMap(lat, lon);
+    }
+
+    window.onload = () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          latField.value = pos.coords.latitude;
+          lonField.value = pos.coords.longitude;
+          statusEl.innerText = `📍 Location: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+          updateMap();
+        }, () => {
+          statusEl.innerText = "⚠️ Geolocation failed. Try uploading a GPS-tagged photo.";
+        });
+      }
+    };
+
+    imageInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewImg.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+      EXIF.getData(file, function () {
+        const lat = EXIF.getTag(this, "GPSLatitude");
+        const lon = EXIF.getTag(this, "GPSLongitude");
+        const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+        const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+        if (lat && lon && latRef && lonRef) {
+          const toDecimal = (dms, ref) => {
+            const [d, m, s] = dms;
+            const sign = ref === "S" || ref === "W" ? -1 : 1;
+            return sign * (d + m / 60 + s / 3600);
+          };
+          latField.value = toDecimal(lat, latRef);
+          lonField.value = toDecimal(lon, lonRef);
+          statusEl.innerText = `📸 EXIF GPS: ${latField.value.toFixed(4)}, ${lonField.value.toFixed(4)}`;
+          updateMap();
+        }
+      });
+    });
+
+    let videoStream = null;
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    document.getElementById("startCamera").addEventListener("click", async () => {
+      document.getElementById("camera-preview").style.display = "block";
+      videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = videoStream;
+    });
+    document.getElementById("captureBtn").addEventListener("click", () => {
+      const context = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageDataUrl = canvas.toDataURL("image/jpeg");
+      previewImg.src = imageDataUrl;
+      previewImg.style.display = "block";
+      video.srcObject.getTracks().forEach(track => track.stop());
+      fetch(imageDataUrl).then(res => res.blob()).then(blob => {
+        const file = new File([blob], `captured-${Date.now()}.jpg`, { type: "image/jpeg" });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        imageInput.files = dt.files;
+      });
+    });
+
+    document.getElementById("reportForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const severity = document.getElementById("severity").value;
+      const lat = parseFloat(latField.value);
+      const lon = parseFloat(lonField.value);
+      const file = imageInput.files[0];
+      let imageUrl = null;
+      try {
+        if (file) {
+          const storageRef = ref(storage, `reports/${Date.now()}_${file.name}`);
+          await uploadBytes(storageRef, file);
+          imageUrl = await getDownloadURL(storageRef);
+        }
+        await addDoc(collection(db, "reports"), {
+          title, description, severity, latitude: lat || null, longitude: lon || null,
+          imageUrl: imageUrl || null, timestamp: serverTimestamp()
+        });
+        alert("✅ Report submitted!");
+        document.getElementById("reportForm").reset();
+        previewImg.style.display = "none";
+        statusEl.innerText = "📍 Geo-tag will reload on refresh.";
+
+        // Simulated AI Confidence Score
+        const confidenceBox = document.getElementById("confidence-box");
+        const ring = document.getElementById("confidence-ring");
+        const label = document.getElementById("confidence-label");
+        const score = Math.floor(Math.random() * 40) + 60; // 60-100%
+        confidenceBox.style.display = "block";
+        let current = 0;
+        const totalLength = 377;
+        const animate = () => {
+          if (current < score) {
+            current++;
+            const offset = totalLength - (current / 100) * totalLength;
+            ring.style.strokeDashoffset = offset;
+            label.textContent = current + "%";
+            requestAnimationFrame(animate);
+          }
+        };
+        animate();
+
+      } catch (err) {
+        alert("⚠️ Failed to submit report.");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruFeed Infinite Feed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #1B2A41;
+      --highlight: #56CCF2;
+      --orange: #FF6F61;
+      --green: #43a047;
+      --text: #F0F4F8;
+      --bgcard: rgba(35, 48, 68, 0.95);
+      --shadow: 0 3px 16px #56ccf21a, 0 2px 10px #ff6f6111;
+      --border: #4a90e899;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(120deg, #1B2A41 70%, #56ccf214 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      height: 60px;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      padding-left: 16px;
+      font-weight: bold;
+      font-size: 1.4em;
+      color: var(--highlight);
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+
+  .mainfeedarea {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: calc(100% - 150px); /* Prevents overflow into sidebar */
+    max-width: calc(100% - 150px);
+    overflow: hidden;
+  }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: rgba(35, 48, 68, 0.2);
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      width: 100%; /* Ensure filter bar spans the full width */
+    }
+
+    .filter-bar label {
+      font-weight: 700;
+      color: var(--orange);
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+      background: rgba(27, 42, 65, 0.97);
+      color: var(--text);
+      border: 1px solid #56ccf269;
+      border-radius: 10px;
+      padding: 6px 12px;
+    }
+
+    .feed-cards-outer {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+  .cards-infinite-marquee {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    position: relative;
+    z-index: 1;
+  }
+
+    .marquee-row-1 { animation: scrollLeft 50s linear infinite; }
+    .marquee-row-2 { animation: scrollRight 50s linear infinite; }
+
+    @keyframes scrollLeft {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @keyframes scrollRight {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(0); }
+    }
+
+    .report-card-fold3d {
+      min-width: 260px; /* Adjusted the min-width */
+      max-width: 280px; /* Set a max-width for responsiveness */
+      width: 18vw; /* Use a percentage-based width to be more flexible */
+      height: 250px;
+      background: var(--bgcard);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+      transition: 0.2s;
+      overflow: hidden; /* Prevent overflow */
+    }
+
+    .report-card-fold3d:hover {
+      transform: scale(1.04);
+    }
+
+    .report-image {
+      width: 92%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1.4px solid #56ccf220;
+      margin: 0 auto 10px;
+    }
+
+    .report-title {
+      font-weight: 900;
+      font-size: 1.05em;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: linear-gradient(91deg, #56CCF2 37%, #ff6f6136 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .report-summary {
+      font-size: 0.94em;
+      text-align: center;
+      color: #d7e3f2;
+      margin: 0 6px 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .report-meta-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.86em;
+      text-align: center;
+      color: #b2c3d9;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      background: #264663;
+      color: #80e5ff;
+      padding: 3px 10px;
+      border-radius: 8px;
+      border: 1.4px solid #56ccf29a;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .verified-badge {
+      background: #1bbd74;
+      color: #fff;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 8px;
+      border: 1px solid #2aff98;
+      font-size: 0.82em;
+    }
+
+    .badge-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .dot-high { background: #E94F37; }
+    .dot-medium { background: #FF6F61; }
+    .dot-low { background: #2979FF; }
+
+    .report-footer {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .view-btn {
+      background: linear-gradient(90deg, var(--highlight), var(--orange));
+      color: #152336;
+      font-weight: 700;
+      font-size: 1em;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .vote-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .vote-button {
+      background: var(--highlight);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95em;
+    }
+
+    .vote-count {
+      margin-left: 4px;
+      font-family: monospace;
+    }
+
+    footer {
+      background: var(--navy);
+      color: #80e5ffcc;
+      font-size: 1em;
+      text-align: center;
+      padding: 12px;
+      margin-top: 32px;
+    }
+
+  .flexnavfeed {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 60px - 40px);
+    overflow: hidden;
+    position: relative;
+  }
+
+
+    nav {
+      width: 150px;
+      min-width: 110px;
+      background: var(--navy);
+      border-right: 1.5px solid var(--border);
+      box-shadow: 2px 0 12px #1738591a;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-gradient {
+      font-size: 1.2em;
+      font-weight: 900;
+      padding: 20px 0 12px 18px;
+      background: linear-gradient(90deg, #56CCF2 27%, #FF6F61 82%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1.2px;
+    }
+
+    .navlinks {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .navlinks a {
+      text-decoration: none;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .navlinks a:hover,
+    .navlinks a[aria-current="page"] {
+      background: linear-gradient(90deg, var(--highlight), var(--orange));
+      color: #0f1e2e;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">TruFeed</div>
+
+  <div class="flexnavfeed">
+    <!-- 🧭 Side Navbar -->
+    <nav>
+      <div class="logo-gradient">TruFeed</div>
+      <div class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="feed.html" aria-current="page">Events</a>
+        <a href="report.html">Submit Report</a>
+        <a href="map.html">LiveMap</a>
+      </div>
+    </nav>
+
+    <!-- 📥 Main Feed Content -->
+    <main class="mainfeedarea">
+      <form class="filter-bar" onsubmit="return false;">
+        <label for="severityFilter">Severity:</label>
+        <select id="severityFilter">
+          <option value="">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <label for="categoryFilter">Category:</label>
+        <select id="categoryFilter">
+          <option value="">All</option>
+          <option value="Fire">Fire</option>
+          <option value="Power Outage">Power Outage</option>
+          <option value="Accident">Accident</option>
+          <option value="Weather">Weather</option>
+        </select>
+        <input type="search" id="searchInput" placeholder="Search by title/location..." autocomplete="off" />
+      </form>
+
+      <div class="feed-cards-outer">
+        <div class="cards-infinite-marquee marquee-row-1" id="feed-row-1"></div>
+        <div class="cards-infinite-marquee marquee-row-2" id="feed-row-2"></div>
+      </div>
+    </main>
+  </div>
+
+  <footer>&copy; 2025 TruFeed. All rights reserved.</footer>
+</body>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      onSnapshot,
+      doc,
+      updateDoc,
+      increment,
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2uyKd5A2ncFmXALwyCLwaASUwaF3XkNk",
+      authDomain: "the-truefeed.firebaseapp.com",
+      projectId: "the-truefeed",
+      storageBucket: "the-truefeed.appspot.com",
+      messagingSenderId: "252519231652",
+      appId: "1:252519231652:web:963e41bac0035cc96bf631",
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let filterSeverity = "";
+    let filterCategory = "";
+    let filterSearch = "";
+    window.reportsAll = [];
+
+    document.getElementById("severityFilter").onchange = (e) => {
+      filterSeverity = e.target.value;
+      renderInfiniteFeed();
+    };
+    document.getElementById("categoryFilter").onchange = (e) => {
+      filterCategory = e.target.value;
+      renderInfiniteFeed();
+    };
+    document.getElementById("searchInput").oninput = (e) => {
+      filterSearch = e.target.value.toLowerCase();
+      renderInfiniteFeed();
+    };
+
+    function renderCard(r) {
+      const title = (r.title || "Untitled").trim();
+      const limitedTitle = title.length > 60 ? title.slice(0, 60) + "…" : title;
+
+      const desc = (r.description || "—").replace(/\s+/g, " ").trim();
+      const shortDesc = desc.length > 140 ? desc.slice(0, 140) + "…" : desc;
+
+      const sev = r.severity || "low";
+      const sevLabel = sev === "high" ? "High severity" : sev === "medium" ? "Medium severity" : "Low severity";
+      const date = r.timestamp?.seconds
+        ? new Date(r.timestamp.seconds * 1000).toLocaleDateString()
+        : "";
+
+      const verifiedBadge = r.verified
+        ? `<span class="badge verified-badge" title="Verified Report">✔ Verified</span>`
+        : "";
+
+      return `
+        <section class="report-card-fold3d">
+          <div class="fold-inner">
+            <img class="report-image" src="${r.imageUrl || "https://placehold.co/400x225?text=No+Image"}" alt="Event photo" />
+            <div class="report-title" title="${title}">${limitedTitle}</div>
+            <div class="report-summary" title="${desc}">${shortDesc}</div>
+            <div class="report-meta-bar">
+              <span class="badge"><span class="badge-dot dot-${sev}"></span>${sevLabel}</span>
+              <span class="badge category">${r.category || "General"}</span>
+              <span class="report-date">${date}</span>
+              ${verifiedBadge}
+            </div>
+            <div class="report-footer">
+              <a href="analysis.html?id=${r.id}" class="view-btn">View Analysis</a>
+              <div class="vote-buttons">
+                <button class="vote-button" aria-label="Upvote" data-id="${r.id}" data-type="upvote">▲ <span class="vote-count">${r.upvotes || 0}</span></button>
+                <button class="vote-button" aria-label="Downvote" data-id="${r.id}" data-type="downvote">▼ <span class="vote-count">${r.downvotes || 0}</span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderInfiniteFeed() {
+      let filteredReports = [];
+      for (const r of window.reportsAll) {
+        if (
+          (!!filterSeverity && r.severity !== filterSeverity) ||
+          (!!filterCategory && r.category !== filterCategory) ||
+          (filterSearch &&
+            !(
+              (r.title || "").toLowerCase().includes(filterSearch) ||
+              (r.location || "").toLowerCase().includes(filterSearch)
+            ))
+        ) continue;
+        filteredReports.push(r);
+      }
+
+      let cardsArr = filteredReports;
+      while (cardsArr.length < 12 && filteredReports.length > 0) {
+        cardsArr = cardsArr.concat(filteredReports);
+      }
+
+      const rowLen = Math.ceil(cardsArr.length / 2);
+      let row1Cards = cardsArr.slice(0, rowLen);
+      let row2Cards = cardsArr.slice(rowLen, rowLen * 2);
+      if (row2Cards.length < row1Cards.length) {
+        row2Cards = row2Cards.concat(row1Cards.slice(0, row1Cards.length - row2Cards.length));
+      }
+      row1Cards = row1Cards.concat(row1Cards);
+      row2Cards = row2Cards.concat(row2Cards);
+
+      document.getElementById("feed-row-1").innerHTML = row1Cards.map(renderCard).join('');
+      document.getElementById("feed-row-2").innerHTML = row2Cards.map(renderCard).join('');
+
+      document.querySelectorAll(".vote-button").forEach((btn) => {
+        btn.onclick = async function () {
+          const id = btn.dataset.id;
+          const type = btn.dataset.type;
+          const r = window.reportsAll.find((r) => r.id === id);
+          if (type === "upvote") {
+            r.upvotes = (r.upvotes || 0) + 1;
+          } else {
+            r.downvotes = (r.downvotes || 0) + 1;
+          }
+          renderInfiniteFeed();
+          const reportRef = doc(db, "reports", id);
+          if (type === "upvote") {
+            updateDoc(reportRef, { upvotes: increment(1) });
+          } else {
+            updateDoc(reportRef, { downvotes: increment(1) });
+          }
+        };
+      });
+    }
+
+    onSnapshot(collection(db, "reports"), (snapshot) => {
+      window.reportsAll = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        window.reportsAll.push({
+          ...data,
+          id: doc.id,
+          severity: (data.severity || "").toLowerCase(),
+          category: data.category || "",
+          location: data.location || "",
+          verified: !!data.verified,
+        });
+      });
+      renderInfiniteFeed();
+    });
+  </script>
+</html>

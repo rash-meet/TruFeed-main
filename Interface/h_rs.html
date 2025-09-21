@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruFeed Homepage — Animated Earth Hero (Purple/Pink Theme)</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(125deg, #27114e 50%, #ff94d2 120%);
+      color: #F9F6FE;
+      height: 300vh;
+    }
+    body { position: relative; }
+    #earth-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1,1);
+      transform-origin: center bottom;
+      width: 420px;
+      height: 420px;
+      will-change: transform;
+      transition: transform 0.1s linear;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      border-radius: 50%;
+      box-shadow: 0 0 40px #a259ff88;
+    }
+    #scroll-cue {
+      position: fixed;
+      left: 50%;
+      bottom: 65px;
+      transform: translateX(-50%);
+      color: #a259ff;
+      font-weight: 700;
+      font-size: 1.09rem;
+      letter-spacing: 2.1px;
+      user-select: none;
+      cursor: pointer;
+      animation: bounce 2s infinite;
+      z-index: 1100;
+      text-shadow: 0 2px 18px #a259ff5b;
+      transition: opacity 0.3s;
+    }
+    @keyframes bounce {
+      0%, 100% {transform: translateX(-50%) translateY(0);}
+      50% {transform: translateX(-50%) translateY(14px);}
+    }
+    nav {
+      position: fixed;
+      top: -80px;
+      left: 0;
+      width: 100vw;
+      height: 60px;
+      background: rgba(30, 14, 52, 0.96);
+      box-shadow: 0 2px 16px #ff94d233;
+      color: #a259ff;
+      font-weight: 900;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4vw;
+      letter-spacing: 2.6px;
+      z-index: 1200;
+      user-select: none;
+      opacity: 0;
+      transform: translateY(-100%);
+      transition: top 1.5s linear, opacity 1.3s linear;
+    }
+    nav.visible {
+      top: 0;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .logo {
+      font-weight: 900;
+      font-size: 2rem;
+      background: linear-gradient(92deg,#a259ff,#d489ff 60%,#ff94d2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text; text-fill-color: transparent;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 20px #a259ff33;
+    }
+    nav ul {
+      display: flex; gap: 2em; list-style: none; margin: 0; padding: 0;
+    }
+    nav ul li {
+      opacity: 0;
+      transform: translateY(25px);
+      transition: opacity 1s, transform 1s;
+    }
+    nav.visible ul li { opacity: 1; transform: translateY(0); }
+    nav.visible ul li:nth-child(1) {transition-delay: 0.2s;}
+    nav.visible ul li:nth-child(2) {transition-delay: 0.45s;}
+    nav.visible ul li:nth-child(3) {transition-delay: 0.7s;}
+    .btn-gradient {
+      background: linear-gradient(90deg, #a259ff 44%, #d489ff 100%);
+      border: none; border-radius: 22px;
+      padding: 0.8em 2em; color: #fff;
+      font-weight: 700; font-size: 1.07rem; margin-left: 22px;
+      cursor: pointer; box-shadow: 0 0 19px #a259ff77;
+      outline: none;
+      transition: background 0.2s, transform 0.18s;
+    }
+    .btn-gradient:hover {
+      background: linear-gradient(90deg,#8601af 64%, #ff94d2 100%);
+      transform: scale(1.08);
+    }
+    nav .btn-gradient { font-size: 1.03rem; }
+    #welcome-section {
+      position: fixed;
+      left: 50%;
+      bottom: 120px;
+      transform: translateX(-50%) translateY(35px);
+      color: #a259ff;
+      text-align: center;
+      opacity: 0;
+      user-select: none;
+      z-index: 1150;
+      max-width: 90vw;
+      pointer-events: none;
+      background: none;
+      transition: opacity 1.2s cubic-bezier(.42,.9,.2,1), transform 1.25s cubic-bezier(.42,1.2,.2,1);
+    }
+    #welcome-section.visible {
+      opacity: 1; pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    #welcome-section h2 {
+      font-size: 2.15rem;
+      font-weight: 900;
+      margin: 0 0 14px 0;
+      letter-spacing: 0.09em;
+      background: linear-gradient(92deg, #a259ff, #ff94d2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    #welcome-subheading {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #dac8ff;
+      min-height: 29px; margin-bottom: 23px;
+      opacity: 0;
+      transition: opacity 0.7s;
+    }
+    #welcome-section.visible #welcome-subheading { opacity: 1;}
+    #get-started-btn {
+      background: linear-gradient(90deg, #a259ff 44%, #d489ff 100%);
+      border: none; border-radius: 24px;
+      padding: 0.89em 2.75em;
+      font-weight: 700; font-size: 1.12rem; color: #fff;
+      cursor: pointer; box-shadow: 0 0 19px #a259ff77;
+      outline: none; opacity: 0;
+      transform: scale(0.92);
+      transition: background 0.2s, transform 0.25s, opacity 0.5s;
+    }
+    #welcome-section.visible #get-started-btn {
+      opacity: 1;
+      transform: scale(1);
+      transition-delay: 0.3s;
+    }
+    /* How It Works Section Styling */
+    #how-it-works {
+      margin-top: 180vh; /* after the hero area, adjust as needed */
+      padding: 80px 4vw 120px 4vw;
+      color: #fff;
+    }
+    #how-it-works h2 {
+      text-align: center;
+      color: #a259ff;
+      font-size: 2rem;
+      margin-bottom: 50px;
+      letter-spacing: 1.3px;
+    }
+    #steps {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+    .step {
+      flex: 1;
+      min-width: 220px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 32px 22px 22px 22px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.75s cubic-bezier(.6,1.7,.7,1);
+      box-shadow: 0 6px 23px #a259ff21;
+    }
+    .step img {
+      width: 40px; height: 40px; margin-bottom: 12px;
+      filter: drop-shadow(0 0 5px #a259ffd0);
+    }
+    /* Step transitions will be controlled by JS */
+    @media (max-width: 700px) {
+      #earth-container { width: 98vw; height: 170px; }
+      #welcome-section h2 { font-size: 1.15rem;}
+      nav { font-size: 1.12rem; padding: 0 2vw;}
+      nav .logo { font-size: 1.2rem;}
+      nav .btn-gradient { font-size: 0.93rem;}
+      #steps { flex-direction:column; gap:22px;}
+      .step { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="earth-container"></div>
+<div id="scroll-cue">SCROLL DOWN</div>
+<nav id="navbar">
+  <span class="logo">TruFeed</span>
+  <ul>
+    <li><a href="#workflow">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#map">Reports Map</a></li>
+  </ul>
+  <a href="#get-started" class="btn-gradient">Get Started</a>
+</nav>
+<div id="welcome-section">
+  <h2>Welcome to TruFeed</h2>
+  <div id="welcome-subheading"></div>
+  <button id="get-started-btn">Get Started</button>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.140.0/build/three.min.js"></script>
+<script>
+  // Setup Three.js Earth
+  const container = document.getElementById('earth-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  container.appendChild(renderer.domElement);
+
+  function onWindowResize() {
+    const size = container.getBoundingClientRect();
+    renderer.setSize(size.width, size.height);
+    camera.aspect = size.width / size.height;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', onWindowResize);
+
+  const geometry = new THREE.SphereGeometry(1, 64, 64);
+  const material = new THREE.MeshPhongMaterial({
+    map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+    shininess: 10,
+    specular: 0x390059
+  });
+  const earthMesh = new THREE.Mesh(geometry, material);
+  scene.add(earthMesh);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1.18);
+  light.position.set(5, 3, 5);
+  scene.add(light);
+
+  camera.position.z = 3.3;
+  onWindowResize();
+  function animate() {
+    requestAnimationFrame(animate);
+    earthMesh.rotation.y += 0.0016;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Earth & UI elements
+  const earthContainer = document.getElementById('earth-container');
+  const scrollCue = document.getElementById('scroll-cue');
+  const navbar = document.getElementById('navbar');
+  const welcomeSection = document.getElementById('welcome-section');
+  const welcomeSubheading = document.getElementById('welcome-subheading');
+  const steps = document.querySelectorAll('.step');
+
+  // Welcome subheading phrases
+  const phrases = [
+    "Your Real-Time Civic Feed",
+    "AI-Powered City Updates",
+    "Verified, Community-Driven"
+  ];
+  let phraseIndex = 0;
+  function cycleSubheading() {
+    welcomeSubheading.textContent = phrases[phraseIndex];
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+  }
+  cycleSubheading();
+  setInterval(cycleSubheading, 2100);
+
+  scrollCue.addEventListener('click', () => {
+    window.scrollTo({ top: 400, behavior: 'smooth' });
+  });
+
+  // Scroll animation
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY || window.pageYOffset;
+    // Control sections:
+    const heroEnd = 530; // End of full hero section scroll
+    const halfEarthStart = heroEnd;
+    const halfEarthEnd = heroEnd + 120;
+    const howWorksStart = heroEnd + 120;
+    const howWorksEnd = howWorksStart + 350;
+
+    // EARTH: morph and move with scrollY
+    // 1. Hero section: (ScrollY 0 - heroEnd)
+    if (scrollY <= halfEarthStart) {
+      // Earth smoothly shrinks vertically into a half-sphere and moves downward
+      const progress = Math.min(scrollY / halfEarthStart, 1);
+      const scaleY = 1 - 0.45 * progress; // Shrinks to 55% height
+      const scaleX = 1;
+      const translateY = -50 + 135 * progress; // Adjust 135 to control how far down it moves
+      earthContainer.style.transform = `translate(-50%, ${translateY}vh) scale(${scaleX}, ${scaleY})`;
+      scrollCue.style.opacity = progress < 0.12 ? 1 : 0;
+      navbar.classList.remove('visible');
+      welcomeSection.classList.remove('visible');
+      document.querySelectorAll('#navbar ul li').forEach(li => li.style.transitionDelay = "0s");
+
+      // Hide steps
+      steps.forEach(step => {
+        step.style.opacity = '0';
+        step.style.transform = 'translateY(40px)';
+      });
+    }
+    // 2. Half-Earth nav+welcome: (ScrollY heroEnd - howWorksStart)
+    else if (scrollY > halfEarthStart && scrollY < howWorksStart) {
+      earthContainer.style.transform = `translate(-50%, 85vh) scale(1,0.55)`; // Fixed at bottom, semi-circle
+      scrollCue.style.opacity = 0;
+
+      navbar.classList.add('visible');
+      welcomeSection.classList.add('visible');
+      document.querySelectorAll('#navbar ul li').forEach((li, i) => {
+        li.style.transitionDelay = (0.3 + i * 0.235) + 's';
+      });
+
+      // Hide steps
+      steps.forEach(step => {
+        step.style.opacity = '0';
+        step.style.transform = 'translateY(40px)';
+      });
+    }
+    // 3. Earth moves up, steps fade in: (howWorksStart to howWorksEnd)
+    else if (scrollY >= howWorksStart) {
+      // move earth from bottom center to higher as we scroll further
+      const extraProgress = Math.min((scrollY - howWorksStart) / (howWorksEnd - howWorksStart), 1);
+      const earthTranslateYUp = 85 - 70 * extraProgress;
+      earthContainer.style.transform = `translate(-50%, ${earthTranslateYUp}vh) scale(1,0.55)`;
+      scrollCue.style.opacity = 0;
+
+      navbar.classList.add('visible');
+      welcomeSection.classList.add('visible');
+      document.querySelectorAll('#navbar ul li').forEach((li, i) => {
+        li.style.transitionDelay = (0.3 + i * 0.235) + 's';
+      });
+
+      // Fade in steps in order
+      steps.forEach((step, i) => {
+        if (extraProgress > 0.07 * i) {
+          step.style.opacity = '1';
+          step.style.transform = 'translateY(0)';
+        } else {
+          step.style.opacity = '0';
+          step.style.transform = 'translateY(40px)';
+        }
+      });
+    }
+  });
+
+  // Responsive resize initial
+  setTimeout(onWindowResize, 500);
+</script>
+</body>
+</html>

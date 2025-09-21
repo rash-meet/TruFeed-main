@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruFeed Infinite Feed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #050505; /* Very dark grey, almost black */
+      --highlight: #F8F8F8; /* Pure white for highlights */
+      --orange: #E0E0E0; /* Light grey for subtle contrast */
+      --green: #43a047; /* Keep green for verified badge */
+      --text: #FFFFFF; /* Pure white text */
+      --text-secondary: #B0B0B0; /* Medium grey for secondary text */
+      --bgcard: rgba(20, 20, 20, 0.95); /* Dark grey card background with transparency */
+      --shadow: 0 5px 20px rgba(0, 0, 0, 0.3), 0 3px 15px rgba(0, 0, 0, 0.2); /* Darker, more prominent shadows */
+      --border: #404040; /* Subtle grey border */
+      --sentiment-positive: #28A745; /* Slightly darker green for positive */
+      --sentiment-negative: #DC3545; /* Slightly darker red for negative */
+      --sentiment-neutral: #FFC107; /* Amber for neutral, stands out */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000; /* Solid black background */
+      background-image: url('918401.jpg'); /* Placeholder for a subtle background image */
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .topbar {
+      height: 60px;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      padding-left: 16px;
+      font-weight: bold;
+      font-size: 1.4em;
+      color: var(--highlight);
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mainfeedarea {
+      padding: 24px; /* Increased padding */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: calc(100% - 180px); /* Adjusted for wider nav */
+      flex-grow: 1; /* Allow it to grow and fill available space */
+      overflow-y: auto; /* Enable vertical scrolling */
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px; /* Increased gap */
+      background: rgba(10, 10, 10, 0.7); /* Darker, more transparent filter bar */
+      padding: 16px 20px; /* Increased padding */
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 32px; /* Increased margin */
+      width: 100%;
+    }
+    .filter-bar label {
+      font-weight: 700;
+      color: var(--orange); /* Light grey for labels */
+    }
+    .filter-bar select,
+    .filter-bar input {
+      background: #252525; /* Darker input background */
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px; /* Increased padding */
+    }
+    .feed-cards-outer {
+      display: flex;
+      flex-direction: column;
+      gap: 40px; /* Increased gap between rows */
+    }
+    .cards-infinite-marquee {
+      display: flex;
+      gap: 20px; /* Increased gap between cards */
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      position: relative;
+      z-index: 1;
+    }
+    .marquee-row-1 { animation: scrollLeft 100s linear infinite; } /* Slower speed */
+    .marquee-row-2 { animation: scrollRight 100s linear infinite; } /* Slower speed */
+    @keyframes scrollLeft {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    @keyframes scrollRight {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(0); }
+    }
+    .report-card-fold3d {
+      min-width: 300px; /* Larger min-width */
+      max-width: 350px; /* Larger max-width */
+      width: 22vw; /* Larger percentage-based width */
+      height: 400px; /* Significantly increased height */
+      background: var(--bgcard);
+      border-radius: 20px; /* More rounded corners */
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px; /* Increased padding */
+      transition: 0.3s; /* Smoother transition */
+      overflow: hidden;
+    }
+    .report-card-fold3d:hover {
+      transform: scale(1.03); /* Slightly less aggressive scale on hover */
+    }
+    .report-image {
+      width: 95%; /* Slightly wider image */
+      height: 120px; /* Taller image */
+      object-fit: cover;
+      border-radius: 15px; /* More rounded image corners */
+      border: 1.4px solid var(--border); /* Grey border */
+      margin: 0 auto 15px; /* More margin */
+    }
+    .report-title {
+      font-weight: 900;
+      font-size: 1.15em; /* Slightly larger title */
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: linear-gradient(91deg, var(--highlight) 37%, var(--orange) 100%); /* White to light grey gradient */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px; /* More margin */
+    }
+    .report-summary {
+      font-size: 1em; /* Slightly larger summary text */
+      text-align: center;
+      color: var(--text-secondary); /* Medium grey for summary */
+      margin: 0 8px 12px; /* More margin */
+      display: -webkit-box;
+      -webkit-line-clamp: 4; /* Increased lines for summary */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .report-meta-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px; /* Increased gap */
+      font-size: 0.9em; /* Slightly larger meta text */
+      text-align: center;
+      color: var(--text-secondary); /* Medium grey for meta bar */
+      margin-bottom: 12px; /* More margin */
+    }
+    .badge {
+      background: #252525; /* Darker badge background */
+      color: var(--highlight); /* White for badge text */
+      padding: 4px 12px; /* Increased padding */
+      border-radius: 10px; /* More rounded badge corners */
+      border: 1.4px solid var(--border); /* Grey border */
+      display: inline-flex;
+      align-items: center;
+    }
+    .verified-badge {
+      background: var(--green); /* Keep green for verified */
+      color: #fff;
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 10px;
+      border: 1px solid #2aff98;
+      font-size: 0.86em;
+    }
+    .sentiment-badge {
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 0.86em;
+    }
+    .sentiment-positive {
+      background: var(--sentiment-positive);
+      color: #fff;
+      border: 1px solid var(--sentiment-positive);
+    }
+    .sentiment-negative {
+      background: var(--sentiment-negative);
+      color: #fff;
+      border: 1px solid var(--sentiment-negative);
+    }
+    .sentiment-neutral {
+      background: var(--sentiment-neutral);
+      color: #333; /* Darker text for neutral */
+      border: 1px solid var(--sentiment-neutral);
+    }
+    .badge-dot {
+      width: 12px; /* Larger dot */
+      height: 12px; /* Larger dot */
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px; /* More margin */
+    }
+    .dot-high { background: #E94F37; } /* Keep original colors for severity dots */
+    .dot-medium { background: #FF6F61; }
+    .dot-low { background: #2979FF; }
+    .report-footer {
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 12px; /* Increased gap */
+      align-items: center;
+    }
+    .view-btn {
+      background: linear-gradient(90deg, var(--highlight), var(--orange)); /* White to light grey gradient */
+      color: #151515; /* Dark text for contrast */
+      font-weight: 700;
+      font-size: 1.05em; /* Slightly larger button text */
+      padding: 8px 18px; /* Increased padding */
+      border: none;
+      border-radius: 10px; /* More rounded button corners */
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .vote-buttons {
+      display: flex;
+      gap: 10px; /* Increased gap */
+    }
+    .vote-button {
+      background: var(--bgcard); /* Use card background for vote buttons */
+      color: var(--highlight); /* White for vote button text */
+      border: 1px solid var(--border); /* Grey border */
+      border-radius: 8px; /* More rounded vote button corners */
+      padding: 6px 12px; /* Increased padding */
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1em; /* Slightly larger vote button text */
+    }
+    .vote-count {
+      margin-left: 6px; /* More margin */
+      font-family: monospace;
+      color: var(--text-secondary); /* Grey for vote count */
+    }
+    footer {
+      background: var(--navy);
+      color: var(--text-secondary);
+      font-size: 1em;
+      text-align: center;
+      padding: 16px; /* Increased padding */
+      margin-top: 40px; /* More margin */
+    }
+    .flexnavfeed {
+      display: flex;
+      width: 100%;
+      min-height: calc(100vh - 60px - 40px); /* Ensure it takes at least this much height */
+      position: relative;
+    }
+    nav {
+      width: 180px; /* Slightly wider nav */
+      min-width: 150px;
+      background: var(--navy);
+      border-right: 1.5px solid var(--border);
+      box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2); /* Darker shadow */
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo-gradient {
+      font-size: 1.3em; /* Slightly larger logo */
+      font-weight: 900;
+      padding: 25px 0 15px 20px; /* Increased padding */
+      background: linear-gradient(90deg, var(--highlight) 27%, var(--orange) 82%); /* White to light grey gradient */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1.5px; /* More letter spacing */
+    }
+    .navlinks {
+      display: flex;
+      flex-direction: column;
+      padding: 15px; /* Increased padding */
+    }
+    .navlinks a {
+      text-decoration: none;
+      color: var(--text);
+      padding: 12px 16px; /* Increased padding */
+      border-radius: 15px; /* More rounded corners */
+      margin-bottom: 8px; /* More margin */
+      font-weight: bold;
+    }
+    .navlinks a:hover,
+    .navlinks a[aria-current="page"] {
+      background: linear-gradient(90deg, var(--highlight), var(--orange)); /* White to light grey gradient */
+      color: #151515; /* Dark text on hover */
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">TruFeed</div>
+  <div class="flexnavfeed">
+    <!-- 🧭 Side Navbar -->
+    <nav>
+      <div class="logo-gradient">TruFeed</div>
+      <div class="navlinks">
+        <a href="index.html">Home</a>
+        <a href="feed.html" aria-current="page">Events</a>
+        <a href="report.html">Submit Report</a>
+        <a href="map.html">LiveMap</a>
+      </div>
+    </nav>
+    <!-- 📥 Main Feed Content -->
+    <main class="mainfeedarea">
+      <form class="filter-bar" onsubmit="return false;">
+        <label for="severityFilter">Severity:</label>
+        <select id="severityFilter">
+          <option value="">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <label for="categoryFilter">Category:</label>
+        <select id="categoryFilter">
+          <option value="">All</option>
+          <option value="Fire">Fire</option>
+          <option value="Power Outage">Power Outage</option>
+          <option value="Accident">Accident</option>
+          <option value="Weather">Weather</option>
+          <option value="Infrastructure">Infrastructure</option>
+          <option value="General">General</option>
+        </select>
+        <label for="sentimentFilter">Sentiment:</label>
+        <select id="sentimentFilter">
+          <option value="">All</option>
+          <option value="positive">Positive</option>
+          <option value="negative">Negative</option>
+          <option value="neutral">Neutral</option>
+        </select>
+        <input type="search" id="searchInput" placeholder="Search by title/location..." autocomplete="off" />
+      </form>
+      <div class="feed-cards-outer">
+        <div class="cards-infinite-marquee marquee-row-1" id="feed-row-1"></div>
+        <div class="cards-infinite-marquee marquee-row-2" id="feed-row-2"></div>
+      </div>
+    </main>
+  </div>
+  <footer>© 2025 TruFeed. All rights reserved.</footer>
+</body>
+<script type="module">
+  // Firebase imports and initialization are commented out as data is hardcoded for demonstration.
+  // In a real application, you would uncomment and use your Firebase configuration.
+  /*
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    onSnapshot,
+    doc,
+    updateDoc,
+    increment,
+  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2uyKd5A2ncFmXALwyCLwaASUwaF3XkNk",
+    authDomain: "the-truefeed.firebaseapp.com",
+    projectId: "the-truefeed",
+    storageBucket: "the-truefeed.appspot.com",
+    messagingSenderId: "252519231652",
+    appId: "1:252519231652:web:963e41bac0035cc96bf631",
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  */
+
+  // Hardcoded MongoDB-like data for demonstration
+  const mongoData = [
+    { "_id": "6885932dc49b26f073b6c45d", "cluster_id": "68855965c49b26f073b6c449", "event_summary": "A major landslide has occurred on the Manali National Highway, causing a 9-hour blockage and significant traffic disruptions, prompting a response from authorities. Separately, forest fires are raging in the hills of Uttarakhand, with firefighters working overnight to control them.", "media_urls": [ "https://thenewshimachal.com/wp-content/uploads/2024/01/Landslide-on-Manali-highway.jpg", "https://www.theweek.in/content/dam/week/magazine/theweek/statescan/images/2022/6/24/56-A-forest-fire-in-Kumaon-division-of-Uttarakhand.jpg.transform/schema-16x9/image.jpg", "https://images.tribuneindia.com/cms/gall_content/2019/2/2019_2$largeimg14_Thursday_2019_070858336.jpg", "https://images.tribuneindia.com/cms/gall_content/2017/6/2017_6$largeimg28_Wednesday_2017_125058185.jpg", "https://www.riversideca.gov/readyriverside/sites/riversideca.gov.readyriverside/files/images/badge-landslide.jpg", "https://www.ready.gov/sites/default/files/2025-02/landslide.jpg", "https://www.abhibus.com/blog/wp-content/uploads/2023/06/Safety-Tips-and-Precautions-During-landslide-1.jpg", "https://purple-cdn.web-apps-prod.wo-cloud.com/purple/0f7a645f-e3c1-4a9c-a6dd-ccfa5dff68a7/ccaeda65-166e-49c6-bbcd-ece973f0339c/a5b980d4-efc1-4894-a357-11c291c38e4f/ca69956a-0f57-41fa-83b3-15f0a815ed59.jpg" ], "confidence_score": 73.4375, "source_document_count": 8, "average_time_of_day": "11AM\u20134PM", "event_date": "2025-07-20", "location": "Manali, Himachal Pradesh", "overall_sentiment": "negative" },
+    { "_id": "68859336c49b26f073b6c45e", "cluster_id": "68855965c49b26f073b6c44a", "event_summary": "Uttarakhand experienced a series of widespread forest fires that raged across its hills and jungles, destroying many hectares of forest cover, impacting an estimated 1466 hectares. Firefighters worked overnight, and authorities actively responded to the situation, dedicating efforts to bring the blazes under control. Ultimately, the forest fires were successfully brought under control, and authorities arrested four individuals in connection with the fires. The event was tracked and discussed online using the hashtag #UttarakhandFire.", "media_urls": [ "https://www.theweek.in/content/dam/week/magazine/theweek/statescan/images/2022/6/24/56-A-forest-fire-in-Kumaon-division-of-Uttarakhand.jpg.transform/schema-16x9/image.jpg", "https://drishtiias.com/images/uploads/1681276881_image2.jpg", "https://www.pioneeredge.in/wp-content/uploads/2024/05/forest-fires-780x470.jpg", "https://www.newsbharati.com/Encyc/2019/6/1/2_11_02_56_1_1_H@@IGHT_338_W@@IDTH_666.jpg", "https://images.firstpost.com/wp-content/uploads/2016/04/forestfire_380.jpg?im=FitAndFill=(1200,675)", "https://th-i.thgim.com/public/life-and-style/9y1ld8/article68186378.ece/alternates/BASE_SQUARE/Forest%20fires%20in%20the%20Nilgiris.jpg", "https://news.northeastern.edu/wp-content/uploads/2025/01/wildfire_1400.jpg", "https://images.cnbctv18.com/wp-content/uploads/2023/03/Forest-Fires-India-Reuters-768x432.jpg", "https://e3.365dm.com/25/01/768x432/skynews-kenneth-fire-california_6795717.jpg?20250110070414", "https://i.natgeofe.com/n/3d2820ce-917e-419a-86e8-cc0c9ad35b30/AP25012100489450.jpg" ], "confidence_score": 74.99999999999999, "source_document_count": 10, "average_time_of_day": "6PM\u201312AM", "event_date": "2025-07-20", "location": "Uttarakhand", "overall_sentiment": "negative" },
+    { "_id": "6885933ec49b26f073b6c45f", "cluster_id": "68855965c49b26f073b6c44b", "event_summary": "A bridge has collapsed in Bihar, India, reportedly due to heavy rains, with concerns raised about potential multiple casualties. Authorities are on scene and actively responding to the situation.", "media_urls": [ "https://media.cnn.com/api/v1/images/stellar/prod/230606105518-bihar-bridge-collapse.jpg?c=original", "https://www.nbmcw.com/images/32-Bridges/49685-Bridges-Collapse.jpg", "https://media.assettype.com/deccanherald%2F2025-07-09%2Fw2ixiy9a%2Ffile81ffwp2upso1hvh0xhit.jpg?w=undefined&auto=format%2Ccompress&fit=max", "https://images.moneycontrol.com/static-mcnews/2024/07/20240712062253_bihar-bridge-collapse-edited.jpg?impolicy=website&width=1600&height=900", "https://hips.hearstapps.com/hmg-prod/images/broken-bridge-royalty-free-image-1725637213.jpg?crop=0.665xw:1.00xh;0.172xw,0&resize=640:*" ], "confidence_score": 78.33333333333333, "source_document_count": 5, "average_time_of_day": "12PM\u20135PM", "event_date": "2025-07-20", "location": "Bihar", "overall_sentiment": "negative" },
+    { "id": "68859347c49b26f073b6c460", "cluster_id": "68855965c49b26f073b6c44c", "event_summary": "A new station for the Pune Metro system has been inaugurated in Pune, specifically enhancing connectivity in the Shivajinagar area. Authorities are responding to this event.", "media_urls": [ "https://swarajya.gumlet.io/swarajya/2022-10/20ba3c3e-171c-460f-9a63-0a11f427272b/Titagarh_Wagon_Pune_Metro__1.jpg?w=610&q=50&compress=true&format=auto", "https://www.railjournal.com/wp-content/uploads/2022/03/Pune-metro-opening.jpg", "https://www.systra.com/wp-content/uploads/2022/03/metro-pune-tapis.jpg", "https://akm-img-a-in.tosshub.com/indiatoday/images/story/202203/pune-metro-cropped-1647240391__1200x768.jpeg?size=1200:675", "https://www.townpune.com/wp-content/uploads/2022/03/Pune-Metro-2-435x445.jpg" ], "confidence_score": 76.66666666666667, "average_time_of_day": "12PM\u20135PM", "event_date": "2025-07-20", "location": "Pune, Maharashtra", "overall_sentiment": "positive" },
+    { "_id": "68859352c49b26f073b6c461", "cluster_id": "68855965c49b26f073b6c44d", "event_summary": "Delhi is currently facing significant disruption due to heavy and record-breaking rainfall for the month of May, leading to widespread waterlogging across the city. This has resulted in considerable travel difficulties, with the Delhi Traffic Police receiving at least 50 complaints related to the waterlogging. Concurrently, preparations are underway at India Gate for India's 75th Independence Day celebrations, with parade rehearsals in full swing. Authorities also responded to an unspecified situation related to these rehearsals.", "media_urls": [ "https://www.awazthevoice.in/upload/news/1722493786Delhi.jpeg", "https://images.firstpost.com/wp-content/uploads/2018/08/independence-day-celebrations-5.jpg?im=FitAndFill=(1200,675)", "https://images.hindustantimes.com/img/2021/09/01/550x309/'Highest_in_19_years':_Heavy_rainfall_in_Delhi_breaks_new_September_record_1630494830758_1630494830936.jpg", "https://images.hindustantimes.com/rf/image_size_960x540/HT/p2/2018/07/26/Pictures/delhi-rain-water-logging-traffic-delhi-india_a0375b38-90fb-11e8-90d0-8f805b857cc7.jpg", "https://media.assettype.com/newindianexpress%2F2025-05-26%2F6ykx2ka3%2Fweather080648071.jpg?w=640&auto=format%2Ccompress", "https://www.livemint.com/lm-img/img/2023/08/13/600x338/Full-Dress-Rehearsal-0_1691939807083_1691939833610.jpg", "https://www.livemint.com/lm-img/img/2024/08/29/600x338/Delhi-Waterlog-6_1722599481990_1724903745314.jpg", "https://images.mid-day.com/images/images/2024/aug/PTI08_29_2024_000095B_36046447_d.jpg", "https://www.dailypioneer.com/uploads/2024/story/images/big/heavy-rain-causes-widespread-waterlogging--traffic-disruptions-across-delhi-2024-08-20.jpg", "https://images.deccanchronicle.com/dc-Cover-o51a9n8tp3nmlkh3dg3rn2dg22-20190720161740.Medi.jpeg" ], "confidence_score": 71.11111111111111, "source_document_count": 10, "average_time_of_day": "12PM\u20135PM", "event_date": "2025-07-20", "location": "Delhi, India", "overall_sentiment": "negative" },
+    { "_id": "6885935dc49b26f073b6c462", "cluster_id": "68855965c49b26f073b6c44e", "event_summary": "Floods are causing disruption in villages across Assam, prompting authorities to respond. This event is being identified as #AssamFloods.", "media_urls": [ "https://themeghalayanexpress.com/wp-content/uploads/2025/06/Feature-Image-2025-copy-1.jpg", "https://cimages.milaap.org/milaap/image/upload/v1655973900/production/images/campaign/519138/Assam_Flood_2022_19_jh04qn_1655974476.jpg", "https://static.toiimg.com/thumb/msid-65663530,imgsize-181513,width-400,resizemode-4/65663530.jpg", "https://goqii.com/blog/wp-content/uploads/512294-assam-floods-today.jpg", "https://www.livemint.com/lm-img/img/2023/07/13/600x338/PTI07-13-2023-000040B-0_1689229535776_1689229562093.jpg" ], "confidence_score": 75.0, "source_document_count": 5, "average_time_of_day": "12PM\u20135PM", "event_date": "2025-07-20", "location": "Assam", "overall_sentiment": "negative" },
+    { "_id": "68859363c49b26f073b6c463", "cluster_id": "68855965c49b26f073b6c44f", "event_summary": "A water tank burst in Lucknow, prompting a response from authorities.", "media_urls": [ "https://akm-img-a-in.tosshub.com/lingo/uptak/images/story/202504/680de5495f18b-lakhimpur-kheri--lakhimpur-kheri-news--lakhimpur-kheri-viral-news--lakhimpur-kheri-viral-video--up-n-270524215-16x9.jpeg?size=1200:675&q=50", "https://images.bhaskarassets.com/web2images/521/2025/04/26/c148c5c3-342b-4521-a75d-97d8d0543094_1745665097476.jpg", "https://www.jagranimages.com/images/newimg/26042025/26LAK_2_26042025_444.jpg", "https://static.toiimg.com/thumb/msid-109447230,width-1280,height-720,resizemode-72/109447230.jpg" ], "confidence_score": 75.0, "source_document_count": 4, "average_time_of_day": "12PM\u20135PM", "event_date": "2025-07-20", "location": "Lucknow, India", "overall_sentiment": "negative" },
+    { "_id": "6885936dc49b26f073b6c464", "cluster_id": "68855965c49b26f073b6c450", "event_summary": "Rescue operations are currently underway in Himachal Pradesh due to flooding, with authorities actively responding to the situation.", "media_urls": [ "https://media.assettype.com/newindianexpress/2024-08/22b0a76c-8e6f-4c07-98b4-78d3b77cfe14/ANI_20240802152403.jpg?w=1200&h=675&auto=format%2Ccompress&fit=max&enlarge=true", "https://assets1.cbsnewsstatic.com/hub/i/r/2024/11/27/99260697-90f2-4d60-bf68-2d55924487de/thumbnail/640x427/b2bfdf2d6f017eef555a96160cbde357/indonesia-floods-2185923819.jpg", "https://thenorthlines.com/wp-content/uploads/2025/06/Floods.jpg", "https://www.india.com/wp-content/uploads/2021/07/pjimage-1-11.jpg" ], "confidence_score": 75.0, "source_document_count": 4, "average_time_of_day": "12PM\u20135PM", "event_date": "2025-07-20", "location": "Himachal Pradesh", "overall_sentiment": "negative" },
+    { "_id": "68859373c49b26f073b6c465", "cluster_id": "68855965c49b26f073b6c451", "event_summary": "A heatwave alert in Rajasthan has prompted a response from authorities.", "media_urls": [ "https://i.cdn.newsbytesapp.com/images/l321_10391744000338.jpg" ], "confidence_score": 65.0, "source_document_count": 1, "average_time_of_day": "12PM-5PM", "event_date": "2025-07-20", "location": "Rajasthan", "overall_sentiment": "negative" }
+  ];
+
+  let filterSeverity = "";
+  let filterCategory = "";
+  let filterSearch = "";
+  let filterSentiment = ""; // New filter for sentiment
+  window.reportsAll = [];
+
+  // Event listeners for filters
+  document.getElementById("severityFilter").onchange = (e) => {
+    filterSeverity = e.target.value;
+    renderInfiniteFeed();
+  };
+  document.getElementById("categoryFilter").onchange = (e) => {
+    filterCategory = e.target.value;
+    renderInfiniteFeed();
+  };
+  document.getElementById("sentimentFilter").onchange = (e) => {
+    filterSentiment = e.target.value;
+    renderInfiniteFeed();
+  };
+  document.getElementById("searchInput").oninput = (e) => {
+    filterSearch = e.target.value.toLowerCase();
+    renderInfiniteFeed();
+  };
+
+  /**
+   * Infers a category based on keywords in the event summary.
+   * @param {string} summary The event summary.
+   * @returns {string} The inferred category.
+   */
+  function inferCategory(summary) {
+    const lowerSummary = summary.toLowerCase();
+    if (lowerSummary.includes("fire") || lowerSummary.includes("blaze")) return "Fire";
+    if (lowerSummary.includes("power outage")) return "Power Outage";
+    if (lowerSummary.includes("accident") || lowerSummary.includes("landslide") || lowerSummary.includes("bridge collapsed") || lowerSummary.includes("water tank burst")) return "Accident";
+    if (lowerSummary.includes("weather") || lowerSummary.includes("rainfall") || lowerSummary.includes("waterlogging") || lowerSummary.includes("flood") || lowerSummary.includes("heatwave")) return "Weather";
+    if (lowerSummary.includes("metro") || lowerSummary.includes("station")) return "Infrastructure";
+    return "General";
+  }
+
+  /**
+   * Transforms raw MongoDB-like data into a flattened array of report objects,
+   * creating a separate report for each media URL.
+   * @param {Array<Object>} rawData The raw data from MongoDB.
+   * @returns {Array<Object>} An array of transformed report objects.
+   */
+  function transformData(rawData) {
+    const transformed = [];
+    rawData.forEach(event => {
+      const baseId = event._id || event.id; // Use _id or id
+      const eventSummary = event.event_summary || "No summary available.";
+      const eventLocation = event.location || "Unknown Location";
+      const eventDate = event.event_date || "Unknown Date";
+      const overallSentiment = (event.overall_sentiment || "neutral").toLowerCase();
+
+      // Map sentiment to severity
+      let severity = "low";
+      if (overallSentiment === "negative") {
+        severity = "high";
+      } else if (overallSentiment === "positive") {
+        severity = "low";
+      } else {
+        severity = "medium"; // Default for neutral or unhandled sentiments
+      }
+
+      const category = inferCategory(eventSummary);
+
+      if (event.media_urls && event.media_urls.length > 0) {
+        event.media_urls.forEach((url, index) => {
+          transformed.push({
+            id: `${baseId}_${index}`, // Unique ID for each card, but retains original event ID for voting
+            originalId: baseId, // Store original ID for Firestore updates
+            imageUrl: url,
+            title: `${eventLocation} Event on ${eventDate}`, // Generate title from location and date
+            description: eventSummary,
+            severity: severity,
+            category: category,
+            location: eventLocation,
+            timestamp: { seconds: new Date(eventDate).getTime() / 1000 }, // Convert date string to timestamp-like object
+            verified: false, // Assuming not verified from this data
+            upvotes: 0, // Initialize upvotes
+            downvotes: 0, // Initialize downvotes
+            overall_sentiment: overallSentiment // Store sentiment for filtering and display
+          });
+        });
+      } else {
+        // If no media URLs, create one card with a placeholder image
+        transformed.push({
+          id: `${baseId}_0`,
+          originalId: baseId,
+          imageUrl: "https://placehold.co/400x225?text=No+Image",
+          title: `${eventLocation} Event on ${eventDate}`,
+          description: eventSummary,
+          severity: severity,
+          category: category,
+          location: eventLocation,
+          timestamp: { seconds: new Date(eventDate).getTime() / 1000 },
+          verified: false,
+          upvotes: 0,
+          downvotes: 0,
+          overall_sentiment: overallSentiment
+        });
+      }
+    });
+    return transformed;
+  }
+
+  /**
+   * Generates the HTML for a single report card.
+   * @param {Object} r The report object.
+   * @returns {string} The HTML string for the card.
+   */
+  function renderCard(r) {
+    const title = (r.title || "Untitled").trim();
+    const limitedTitle = title.length > 60 ? title.slice(0, 60) + "…" : title;
+    const desc = (r.description || "—").replace(/\s+/g, " ").trim();
+    const shortDesc = desc.length > 140 ? desc.slice(0, 140) + "…" : desc;
+    const sev = r.severity || "low";
+    const sevLabel = sev === "high" ? "High severity" : sev === "medium" ? "Medium severity" : "Low severity";
+    const date = r.timestamp?.seconds
+      ? new Date(r.timestamp.seconds * 1000).toLocaleDateString()
+      : "";
+    const verifiedBadge = r.verified
+      ? `<span class="badge verified-badge" title="Verified Report">✔ Verified</span>`
+      : "";
+
+    // Determine sentiment badge class
+    let sentimentClass = '';
+    let sentimentText = r.overall_sentiment || 'neutral';
+    if (sentimentText === 'positive') {
+      sentimentClass = 'sentiment-positive';
+    } else if (sentimentText === 'negative') {
+      sentimentClass = 'sentiment-negative';
+    } else {
+      sentimentClass = 'sentiment-neutral';
+    }
+    const sentimentBadge = `<span class="badge sentiment-badge ${sentimentClass}">${sentimentText.charAt(0).toUpperCase() + sentimentText.slice(1)}</span>`;
+
+    return `
+      <section class="report-card-fold3d">
+        <div class="fold-inner">
+          <img class="report-image" src="${r.imageUrl || "https://placehold.co/400x225?text=No+Image"}" alt="Event photo" onerror="this.onerror=null;this.src='https://placehold.co/400x225?text=Image+Load+Error';" />
+          <div class="report-title" title="${title}">${limitedTitle}</div>
+          <div class="report-summary" title="${desc}">${shortDesc}</div>
+          <div class="report-meta-bar">
+            <span class="badge"><span class="badge-dot dot-${sev}"></span>${sevLabel}</span>
+            <span class="badge category">${r.category || "General"}</span>
+            <span class="report-date">${date}</span>
+            ${verifiedBadge}
+            ${sentimentBadge}
+          </div>
+          <div class="report-footer">
+            <a href="analysis.html?id=${r.originalId}" class="view-btn">View Analysis</a>
+            <div class="vote-buttons">
+              <button class="vote-button" aria-label="Upvote" data-id="${r.originalId}" data-type="upvote">▲ <span class="vote-count">${r.upvotes || 0}</span></button>
+              <button class="vote-button" aria-label="Downvote" data-id="${r.originalId}" data-type="downvote">▼ <span class="vote-count">${r.downvotes || 0}</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  /**
+   * Renders the infinite feed based on current filters and available reports.
+   */
+  function renderInfiniteFeed() {
+    let filteredReports = [];
+    for (const r of window.reportsAll) {
+      if (
+        (!!filterSeverity && r.severity !== filterSeverity) ||
+        (!!filterCategory && r.category !== filterCategory) ||
+        (!!filterSentiment && r.overall_sentiment !== filterSentiment) || // Apply sentiment filter
+        (filterSearch &&
+          !(
+            (r.title || "").toLowerCase().includes(filterSearch) ||
+            (r.location || "").toLowerCase().includes(filterSearch) ||
+            (r.description || "").toLowerCase().includes(filterSearch) // Search in description too
+          ))
+      ) continue;
+      filteredReports.push(r);
+    }
+
+    // Duplicate content to ensure continuous marquee effect
+    let cardsArr = filteredReports;
+    while (cardsArr.length < 12 && filteredReports.length > 0) {
+      cardsArr = cardsArr.concat(filteredReports);
+    }
+    // If no filtered reports, ensure cardsArr is empty to avoid errors
+    if (filteredReports.length === 0) {
+        cardsArr = [];
+    }
+
+    const rowLen = Math.ceil(cardsArr.length / 2);
+    let row1Cards = cardsArr.slice(0, rowLen);
+    let row2Cards = cardsArr.slice(rowLen, rowLen * 2);
+
+    // Ensure rows have enough content for infinite scroll
+    if (row1Cards.length > 0) {
+        row1Cards = row1Cards.concat(row1Cards);
+    }
+    if (row2Cards.length > 0) {
+        row2Cards = row2Cards.concat(row2Cards);
+    }
+
+    document.getElementById("feed-row-1").innerHTML = row1Cards.map(renderCard).join('');
+    document.getElementById("feed-row-2").innerHTML = row2Cards.map(renderCard).join('');
+
+    document.querySelectorAll(".vote-button").forEach((btn) => {
+      btn.onclick = async function () {
+        const originalId = btn.dataset.id; // Use originalId for voting logic
+        const type = btn.dataset.type;
+
+        // Find all reports associated with this originalId and update their vote counts locally
+        window.reportsAll.forEach(r => {
+            if (r.originalId === originalId) {
+                if (type === "upvote") {
+                    r.upvotes = (r.upvotes || 0) + 1;
+                } else {
+                    r.downvotes = (r.downvotes || 0) + 1;
+                }
+            }
+        });
+
+        renderInfiniteFeed(); // Re-render to show updated counts
+
+        // In a real Firebase application, you would update the *original* document in Firestore
+        /*
+        const reportRef = doc(db, "reports", originalId);
+        if (type === "upvote") {
+          updateDoc(reportRef, { upvotes: increment(1) });
+        } else {
+          updateDoc(reportRef, { downvotes: increment(1) });
+        }
+        */
+      };
+    });
+  }
+
+  // Simulate fetching data from Firestore by transforming the hardcoded data
+  window.reportsAll = transformData(mongoData);
+  renderInfiniteFeed(); // Initial render
+
+  // In a real Firebase application, you would use onSnapshot like this:
+  /*
+  onSnapshot(collection(db, "reports"), (snapshot) => {
+    const rawFirestoreData = [];
+    snapshot.forEach((doc) => {
+      rawFirestoreData.push({ ...doc.data(), _id: doc.id }); // Assuming Firestore doc.id maps to _id
+    });
+    window.reportsAll = transformData(rawFirestoreData);
+    renderInfiniteFeed();
+  });
+  */
+</script>
+</html>

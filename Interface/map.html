@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruFeed – Live Event Map</title>
+
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <link rel="stylesheet" href="css/map.css">
+  <style>
+    :root {
+      --bg-dark: #1a1a1a;
+      --text-light: #ffffff;
+      --highlight: #25f4ee;
+      --button-bg: #25f4ee;
+      --button-hover: #0e99c2;
+      --input-bg: #2a2a2a;
+      --input-border: #444;
+      --legend-bg: #252525;
+      --legend-border: #444;
+      --error: #ff3b3b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      padding: 1em;
+    }
+
+    header {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--highlight);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .main-map-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+
+    .category-sidebar {
+      width: 250px;
+      background-color: var(--legend-bg);
+      padding: 1em;
+      border-radius: 8px;
+      border: 1px solid var(--legend-border);
+    }
+
+    .category-sidebar h3 {
+      margin-bottom: 1em;
+      color: var(--highlight);
+    }
+
+    .category-sidebar label {
+      display: block;
+      margin-bottom: 1em;
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+
+    .category-sidebar select {
+      width: 100%;
+      padding: 0.75em;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      color: var(--text-light);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .map-and-legend {
+      width: calc(100% - 270px);
+      margin-left: 20px;
+    }
+
+    #map {
+      height: 500px;
+      border-radius: 12px;
+    }
+
+    .legend {
+      background-color: var(--legend-bg);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1em;
+    }
+
+    .legend-item {
+      color: var(--text-light);
+      margin: 0.5em 0;
+      font-size: 1rem;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .dot-high {
+      background-color: #ff365c;
+    }
+
+    .dot-medium {
+      background-color: #ffc62e;
+    }
+
+    .dot-low {
+      background-color: #35b6fa;
+    }
+
+    @media (max-width: 768px) {
+      .main-map-container {
+        flex-direction: column;
+      }
+
+      .category-sidebar {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .map-and-legend {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>TruFeed Event Map</header>
+
+  <main class="main-map-container" role="main" aria-label="Live event map with category and severity filters">
+    <aside class="category-sidebar" aria-label="Event filters">
+      <h3>Filters</h3>
+
+      <label for="severityFilter">
+        Severity:
+        <select id="severityFilter" aria-label="Filter events by severity">
+          <option value="">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+
+      <label for="categoryFilter" style="margin-top: 32px;">
+        Category:
+        <select id="categoryFilter" aria-label="Filter events by category">
+          <option value="">All</option>
+          <!-- Categories populated dynamically -->
+        </select>
+      </label>
+    </aside>
+
+    <section class="map-and-legend">
+      <h2>Live Events – Citywide Map</h2>
+      <div id="map" role="application" aria-label="Event map"></div>
+      <nav class="legend" aria-label="Severity legend">
+        <div class="legend-item"><span class="legend-dot dot-high"></span>High Severity</div>
+        <div class="legend-item"><span class="legend-dot dot-medium"></span>Medium Severity</div>
+        <div class="legend-item"><span class="legend-dot dot-low"></span>Low Severity</div>
+      </nav>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    // Load Leaflet dynamically
+    const leafletScript = document.createElement('script');
+    leafletScript.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    document.body.appendChild(leafletScript);
+
+    leafletScript.onload = () => {
+      const firebaseConfig = {
+        apiKey: "<auth-key>",
+        authDomain: "<>",
+        projectId: "<>",
+        storageBucket: "<>",
+        messagingSenderId: "<>",
+        appId: "<>"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      const DEFAULT_CENTER = [28.6139, 77.2090];
+      const DEFAULT_ZOOM = 12;
+
+      const map = L.map('map', {
+        zoomControl: true,
+        scrollWheelZoom: true,
+        dragging: true,
+      }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+
+      // Marker pulse icon generator based on severity
+      function getDot(severity = 'low') {
+        let color = "var(--highlight)";
+        if (severity === 'high') color = "#ff365c";
+        else if (severity === 'medium') color = "#ffc62e";
+        return L.divIcon({
+          className: '',
+          html: `
+            <div style="width: 25px; height: 25px; border-radius: 50%; background: ${color}; border: 3.5px solid #eee; box-shadow: 0 0 16px 5px ${color}; animation: pulseMarker 1.6s ease-in-out infinite alternate;">
+            </div>`,
+          iconSize: [25, 25],
+          iconAnchor: [12, 12],
+        });
+      }
+
+      let markers = [];
+      let allCategories = new Set();
+
+      function clearMarkers() {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+      }
+
+      // Populate categories select box dynamically
+      function populateCategorySelect() {
+        const categorySelect = document.getElementById('categoryFilter');
+        categorySelect.innerHTML = '<option value="">All</option>';
+        Array.from(allCategories).sort().forEach(cat => {
+          const option = document.createElement('option');
+          option.value = cat;
+          option.textContent = cat;
+          categorySelect.appendChild(option);
+        });
+      }
+
+      // Show/hide markers based on filters
+      function updateMarkersVisibility() {
+        const severityVal = document.getElementById('severityFilter').value.toLowerCase();
+        const categoryVal = document.getElementById('categoryFilter').value;
+
+        const visibleMarkers = markers.filter(marker => {
+          const mSeverity = (marker.options.severity || '').toLowerCase();
+          const mCategory = marker.options.category || '';
+
+          const severityMatch = !severityVal || mSeverity === severityVal;
+          const categoryMatch = !categoryVal || mCategory === categoryVal;
+
+          return severityMatch && categoryMatch;
+        });
+
+        markers.forEach(marker => {
+          if (visibleMarkers.includes(marker)) {
+            if (!map.hasLayer(marker)) map.addLayer(marker);
+          } else {
+            if (map.hasLayer(marker)) map.removeLayer(marker);
+          }
+        });
+
+        if (visibleMarkers.length > 0) {
+          const group = L.featureGroup(visibleMarkers);
+          map.fitBounds(group.getBounds(), { padding: [40, 40] });
+        } else {
+          map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+        }
+      }
+
+      // Attach event listeners for filter dropdowns
+      document.getElementById('severityFilter').addEventListener('change', updateMarkersVisibility);
+      document.getElementById('categoryFilter').addEventListener('change', updateMarkersVisibility);
+
+      // Listen to Firestore live updates
+      onSnapshot(collection(db, "reports"), snapshot => {
+        clearMarkers();
+        allCategories.clear();
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+
+          // Parse coordinates
+          let lat = null, lng = null;
+          if (data.latitude && data.longitude) {
+            lat = parseFloat(data.latitude);
+            lng = parseFloat(data.longitude);
+          } else if (data.location) {
+            const coords = data.location.split(",");
+            if (coords.length === 2) {
+              lat = parseFloat(coords[0]);
+              lng = parseFloat(coords[1]);
+            }
+          }
+          if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+
+          const severity = (data.severity || "low").toLowerCase();
+          const category = data.category?.trim() || '';
+
+          if (category) allCategories.add(category);
+
+          const marker = L.marker([lat, lng], {
+            icon: getDot(severity),
+            category: category,
+            severity: severity
+          }).bindPopup(`
+            <b style="font-size:1.13em;">${data.title || 'Event'}</b><br/>
+            <span style="font-size:1em;">
+              <strong>Category:</strong> ${data.category || "–"}<br/>
+              <strong>Severity:</strong> <span style="color:${
+                severity === "high" ? "#ff365c" :
+                severity === "medium" ? "#ffc62e" :
+                "#35b6fa"
+              }">${data.severity || "–"}</span><br/>
+              <strong>Location:</strong> ${data.address || data.location || "–"}
+            </span>
+            <br/><span style="color:var(--highlight);">
+              ${data.description ? (data.description.length > 120 ? data.description.substring(0,120) + '...' : data.description) : 'No description'}
+            </span>
+            <br/><br/>
+            <a href="analysis.html?id=${doc.id}" style="color:var(--highlight); font-weight: 700;">View Full Report</a>
+          `);
+
+          markers.push(marker);
+        });
+
+        populateCategorySelect();
+        updateMarkersVisibility();
+      });
+    };
+  </script>
+</body>
+
+</html>

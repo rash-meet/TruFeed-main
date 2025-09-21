@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TruFeed – Live Event Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --highlight: #9b59b6; /* Purple */
+      --accent: #f39c12; /* Gold */
+      --text: #e0f2f1;
+      --yellow: #facc15;
+      --bg-dark: #2c3e50;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #9b59b6, #f39c12); /* Purple to Gold */
+      color: var(--text);
+    }
+
+    .category-sidebar {
+      background: var(--bg-dark);
+      padding: 20px;
+      border-radius: 12px;
+      color: var(--text);
+    }
+
+    .legend {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .legend-item {
+      color: var(--highlight);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="backnav1" href="feed.html" aria-label="Back to event feed">&larr; Back</a>
+    TruFeed Event Map
+  </header>
+
+  <main class="main-map-container" role="main" aria-label="Live event map with category and severity filters">
+    <aside class="category-sidebar">
+      <h3>Filters</h3>
+      <label for="severityFilter">Severity:
+        <select id="severityFilter">
+          <option value="">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+      <label for="categoryFilter">Category:
+        <select id="categoryFilter">
+          <option value="">All</option>
+        </select>
+      </label>
+    </aside>
+
+    <section class="map-and-legend">
+      <h2>Live Events – Citywide Map</h2>
+      <div id="map"></div>
+      <nav class="legend">
+        <div class="legend-item"><span class="legend-dot dot-high"></span>High Severity</div>
+        <div class="legend-item"><span class="legend-dot dot-medium"></span>Medium Severity</div>
+        <div class="legend-item"><span class="legend-dot dot-low"></span>Low Severity</div>
+      </nav>
+    </section>
+  </main>
+
+  <script type="module">
+    // Include your Leaflet and Firebase logic here...
+  </script>
+</body>
+</html>

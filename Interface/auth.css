@@ -1,0 +1,134 @@
+  :root {
+      --bg-dark: #1a1a1a;
+      --text-light: #ffffff;
+      --highlight: #25f4ee;
+      --input-bg: #2a2a2a;
+      --input-border: #444;
+      --button-bg: #25f4ee;
+      --button-hover: #0e99c2;
+      --error: #ff3b3b;
+      --success: #4caf50;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .auth-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
+
+    .auth-box {
+      background: #252525;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo-gradient {
+      font-size: 2.2rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--highlight);
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--highlight) 30%, #ffffff 100%);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .auth-tagline {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      color: var(--text-light);
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.3s ease;
+    }
+
+    input:focus {
+      border: 1px solid var(--highlight);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 1rem;
+      background: var(--button-bg);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .auth-btn:hover {
+      background: var(--button-hover);
+    }
+
+    .switch-mode {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--highlight);
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+
+    .forgot-password {
+      display: block;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--highlight);
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+
+    .switch-mode, .forgot-password {
+      transition: color 0.3s ease;
+    }
+
+    .switch-mode:hover, .forgot-password:hover {
+      color: var(--button-hover);
+    }
+
+    #message {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .switch-mode b {
+      font-weight: bold;
+    }

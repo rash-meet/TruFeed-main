@@ -1,0 +1,146 @@
+:root {
+      --bg-dark: #1a1a1a;
+      --card-bg: rgba(30, 41, 59, 0.9);
+      --highlight: hwb(178 34% 28%);
+      --text: #ffffff;
+      --yellow: #facc15;
+      --glass: rgba(255, 255, 255, 0.06);
+      --shadow: 0 8px 30px rgba(0, 255, 195, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+     background-color: #1a1a1a;
+      color: var(--text);
+      padding: 2em 1em;
+    }
+
+    .report-form {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2em;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--highlight);
+      margin-bottom: 1.5em;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 1.4em;
+      margin-bottom: 0.5em;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75em;
+      border: none;
+      border-radius: 10px;
+      background: #1;
+      color: var(--text);
+      font-size: 1em;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: 2px solid var(--highlight);
+    }
+
+    .glow-btn {
+      background: var(--highlight);
+      color: #fff;
+      border: none;
+      padding: 0.75em 1.2em;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 1em auto 0;
+      display: block;
+      box-shadow: 0 0 15px var(--highlight);
+      font-size: 1em;
+      transition: all 0.3s ease;
+    }
+
+    .glow-btn:hover {
+      background: #0e99c2;
+      transform: translateY(-2px);
+    }
+
+    #location-status {
+      font-size: 0.9em;
+      margin-top: 1em;
+      text-align: center;
+      color: var(--yellow);
+    }
+
+    #image-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8em;
+      margin-top: 1em;
+    }
+
+    label[for="image"] {
+      background: var(--highlight);
+      color: #fff;
+      padding: 0.7em 1.2em;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-block;
+      text-align: center;
+      box-shadow: 0 0 12px var(--highlight);
+    }
+
+    #camera-preview,
+    #preview-container {
+      margin-top: 1em;
+      text-align: center;
+    }
+
+    video,
+    #preview-image {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 1em;
+      border: 2px solid var(--glass);
+    }
+
+    canvas {
+      display: none;
+    }
+
+    #map {
+      height: 250px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 1.5em;
+    }
+
+    @media (max-width: 500px) {
+      .report-form {
+        padding: 1.2em;
+      }
+
+      .glow-btn,
+      label[for="image"] {
+        width: 100%;
+        text-align: center;
+      }
+    }
